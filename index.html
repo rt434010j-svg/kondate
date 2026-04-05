@@ -533,8 +533,87 @@
       header { padding: 0 16px; }
       .page { padding: 28px 14px 60px; }
       .input-row { flex-direction: column; }
+      .btn-col { flex-direction: row; }
       .days-grid { grid-template-columns: 1fr; }
+      .arumono-grid { grid-template-columns: 1fr; }
       .shopping-head, .shopping-body { padding: 14px 18px; }
+    }
+
+    /* ── Button column ──────────────────────────── */
+    .btn-col {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .btn-arumono {
+      padding: 0 28px;
+      height: 48px;
+      background: var(--ivory);
+      border: 1.5px solid var(--terracotta);
+      color: var(--terracotta);
+      font-family: 'Noto Serif JP', serif;
+      font-size: 0.92rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      border-radius: 3px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s;
+    }
+    .btn-arumono:hover { background: var(--terra-light); }
+    .btn-arumono:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* ── Arumono result ──────────────────────────── */
+    .arumono-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 18px;
+      margin-top: 0;
+    }
+    .arumono-card {
+      background: var(--ivory);
+      border: 1px solid var(--rule);
+      border-radius: 4px;
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+    }
+    .arumono-card-top {
+      background: var(--terra-light);
+      border-bottom: 1px solid #e8c8b0;
+      padding: 14px 18px 10px;
+    }
+    .arumono-num {
+      font-family: 'Playfair Display', serif;
+      font-size: 0.7rem;
+      color: var(--terracotta);
+      letter-spacing: 0.15em;
+      margin-bottom: 4px;
+    }
+    .arumono-name {
+      font-family: 'Noto Serif JP', serif;
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--ink);
+    }
+    .arumono-card-body { padding: 14px 18px; }
+    .arumono-ingredients {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+    .arumono-tag {
+      font-size: 0.72rem;
+      background: var(--parchment);
+      border: 1px solid var(--rule);
+      border-radius: 2px;
+      padding: 2px 8px;
+      color: var(--ink-light);
+    }
+    .arumono-how {
+      font-size: 0.83rem;
+      color: var(--ink-light);
+      line-height: 1.7;
     }
 
     /* ── Print ───────────────────────────────────── */
@@ -580,7 +659,10 @@
     <div class="input-row">
       <textarea class="input-area" id="ingredientsInput"
         placeholder="例：豚バラ、なす、きのこ類、牛乳...　　※ここに書いた食材は買い物リストから除外されます"></textarea>
-      <button class="btn-primary" id="generateBtn" onclick="generatePlan()">献立を作成</button>
+      <div class="btn-col">
+        <button class="btn-primary" id="generateBtn" onclick="generatePlan()">１週間分の献立</button>
+        <button class="btn-arumono" id="arumonoBtn" onclick="generateArumono()">あるもので作る</button>
+      </div>
     </div>
   </div>
 
@@ -758,7 +840,7 @@ async function generatePlan() {
     showError("エラー: " + e.message);
   } finally {
     btn.disabled = false;
-    btn.textContent = "献立を作成";
+    btn.textContent = "１週間分の献立";
   }
 }
 
@@ -916,6 +998,78 @@ function copyList() {
     `【${cat.category}】\n` + (cat.items || []).map(i => `・${i.name}${i.amount ? " " + i.amount : ""}`).join("\n")
   ).join("\n\n");
   navigator.clipboard.writeText(text).then(() => alert("コピーしました"));
+}
+
+async function generateArumono() {
+  hideError();
+  const btn = document.getElementById("arumonoBtn");
+  btn.disabled = true;
+  btn.textContent = "考え中...";
+
+  document.getElementById("result").innerHTML = `
+    <div class="loading">
+      <div class="loader"></div>
+      <div class="loading-text">あるもので作れる料理を探しています...</div>
+    </div>`;
+
+  try {
+    const ingredients = document.getElementById("ingredientsInput").value.trim();
+    const pantry = "わかめ、塩昆布、どんこ（干し椎茸）、鰹節、ごま、シーチキン、のり、キムチ、卵、しょうが、にんにく、バター、フライドオニオン、玉ねぎ、はるさめ、醤油、みりん、酒、砂糖、塩、胡椒、ごま油、オリーブオイル、酢、味噌、ポン酢、マヨネーズ、ケチャップ";
+    const userMsg = `以下の食材と常備品を使って作れる一品料理の候補を5つ提案してください。
+【手持ちの食材】${ingredients || "（特になし）"}
+【常備品・調味料】${pantry}
+
+JSONのみ出力してください：
+{"dishes":[{"name":"料理名","usedIngredients":["使う食材1","食材2"],"howTo":"簡単な作り方・ポイント（2〜3文）"}]}`;
+
+    const system = `あなたは家庭料理のアドバイザーです。手持ちの食材と常備品を組み合わせて作れる料理を提案します。
+- 料理名に「〇〇風」などの出典表記は絶対につけない
+- 簡単に作れる料理を優先する
+- howToは具体的かつ簡潔に（2〜3文）
+- JSONのみ出力（説明不要）`;
+
+    const text = await callClaude([{ role: "user", content: userMsg }], system);
+    const m = text.match(/\{[\s\S]*\}/);
+    if (!m) throw new Error("JSONの解析に失敗しました");
+    const json = JSON.parse(m[0]);
+    renderArumono(json.dishes || []);
+  } catch (e) {
+    document.getElementById("result").innerHTML = `
+      <div class="empty">
+        <div class="empty-ornament">✦</div>
+        <div class="empty-title">エラーが発生しました</div>
+        <div class="empty-sub">${e.message}</div>
+      </div>`;
+    showError("エラー: " + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "あるもので作る";
+  }
+}
+
+function renderArumono(dishes) {
+  const cards = dishes.map((d, i) => `
+    <div class="arumono-card">
+      <div class="arumono-card-top">
+        <div class="arumono-num">IDEA ${i + 1}</div>
+        <div class="arumono-name">${d.name}</div>
+      </div>
+      <div class="arumono-card-body">
+        <div class="arumono-ingredients">
+          ${(d.usedIngredients || []).map(x => `<span class="arumono-tag">${x}</span>`).join("")}
+        </div>
+        <div class="arumono-how">${d.howTo}</div>
+      </div>
+    </div>`).join("");
+
+  document.getElementById("result").innerHTML = `
+    <div class="plan-top">
+      <div class="section-head" style="flex:1;margin-bottom:0;">
+        <span class="section-title">あるもので作れる · 5つのアイデア</span>
+      </div>
+    </div>
+    <div style="margin-bottom:28px;"></div>
+    <div class="arumono-grid">${cards}</div>`;
 }
 
 init();
