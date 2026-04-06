@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>週間献立プランナー</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --parchment:  #f5efe3;
+      --cream:      #faf6ee;
+      --ivory:      #fffdf8;
+      --ink:        #2a1f0e;
+      --ink-light:  #5c4e38;
+      --ink-muted:  #9a8a72;
+      --ink-faint:  #c8baa8;
+      --herb:       #4a6741;
+      --herb-light: #e8f0e4;
+      --terracotta: #9b5530;
+      --terra-light:#f5ebe3;
+      --ocean:      #3a5f78;
+      --ocean-light:#e3eef5;
+      --plum:       #6b4a78;
+      --plum-light: #f0eaf5;
+      --rule:       #d4c8b0;
+      --shadow-sm:  0 2px 12px rgba(42,31,14,0.07);
+      --shadow-md:  0 6px 28px rgba(42,31,14,0.10);
+      --shadow-lg:  0 12px 48px rgba(42,31,14,0.13);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Noto Sans JP', sans-serif;
+      background: var(--parchment);
+      background-image:
+        radial-gradient(ellipse at 20% 0%, rgba(255,245,220,0.6) 0%, transparent 60%),
+        radial-gradient(ellipse at 80% 100%, rgba(200,180,140,0.2) 0%, transparent 50%);
+      color: var(--ink);
+      min-height: 100vh;
+      line-height: 1.7;
+    }
+
+    /* ── Header ─────────────────────────────────── */
+    header {
+      background: var(--ivory);
+      border-bottom: 1px solid var(--rule);
+      padding: 0 40px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: var(--shadow-sm);
+    }
+    .header-inner {
+      max-width: 1040px;
+      margin: 0 auto;
+      height: 72px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .logo { display: flex; flex-direction: column; line-height: 1.1; }
+    .logo-en {
+      font-family: 'Playfair Display', serif;
+      font-size: 0.65rem;
+      letter-spacing: 0.22em;
+      color: var(--ink-muted);
+      text-transform: uppercase;
+    }
+    .logo-jp {
+      font-family: 'Noto Serif JP', serif;
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--ink);
+      letter-spacing: 0.08em;
+    }
+    .header-right { display: flex; align-items: center; gap: 20px; }
+    .season-mark {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      padding: 4px 14px;
+      border-radius: 2px;
+      border: 1px solid;
+    }
+    .sm-spring { border-color: #d4a0b0; color: #a0305a; background: #fdf0f5; }
+    .sm-summer { border-color: #88b898; color: #2a6040; background: #f0f8f2; }
+    .sm-autumn { border-color: #c8a060; color: #7a4800; background: #fdf5e8; }
+    .sm-winter { border-color: #88a8c8; color: #1a3a60; background: #eef4fa; }
+
+    /* ── Page layout ─────────────────────────────── */
+    .page { max-width: 1040px; margin: 0 auto; padding: 48px 24px 72px; }
+
+    /* ── Input panel ─────────────────────────────── */
+    .input-panel {
+      background: var(--ivory);
+      border: 1px solid var(--rule);
+      border-radius: 4px;
+      padding: 24px 28px;
+      margin-bottom: 40px;
+      box-shadow: var(--shadow-sm);
+    }
+    .input-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--ink-muted);
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      display: block;
+      margin-bottom: 10px;
+    }
+    .input-row { display: flex; gap: 20px; align-items: flex-start; }
+    .input-area {
+      flex: 1;
+      padding: 12px 16px;
+      border: 1px solid var(--rule);
+      border-radius: 3px;
+      font-family: 'Noto Sans JP', sans-serif;
+      font-size: 0.9rem;
+      background: var(--parchment);
+      color: var(--ink);
+      resize: none;
+      height: 76px;
+      line-height: 1.7;
+    }
+    .input-area:focus { outline: none; border-color: var(--herb); }
+    .input-area::placeholder { color: var(--ink-faint); }
+
+    /* ── Buttons ─────────────────────────────────── */
+    .btn-primary {
+      padding: 13px 30px;
+      background: var(--herb);
+      color: #fff;
+      border: none;
+      border-radius: 3px;
+      cursor: pointer;
+      font-family: 'Noto Sans JP', sans-serif;
+      font-size: 0.88rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      white-space: nowrap;
+      transition: all 0.2s;
+      box-shadow: 0 3px 12px rgba(74,103,65,0.28);
+    }
+    .btn-primary:hover { background: #3a5332; transform: translateY(-1px); box-shadow: 0 5px 18px rgba(74,103,65,0.35); }
+    .btn-primary:disabled { background: var(--ink-faint); cursor: not-allowed; transform: none; box-shadow: none; }
+    .btn-sub {
+      padding: 6px 14px;
+      background: transparent;
+      color: var(--ink-muted);
+      border: 1px solid var(--rule);
+      border-radius: 3px;
+      cursor: pointer;
+      font-family: 'Noto Sans JP', sans-serif;
+      font-size: 0.78rem;
+      letter-spacing: 0.04em;
+      transition: all 0.15s;
+    }
+    .btn-sub:hover { border-color: var(--ink-light); color: var(--ink-light); background: var(--cream); }
+    .btn-sub:disabled { opacity: 0.35; cursor: not-allowed; }
+
+    /* ── Loading ─────────────────────────────────── */
+    .loading { text-align: center; padding: 80px 20px; }
+    .loader {
+      width: 32px; height: 32px;
+      border: 2px solid var(--rule);
+      border-top-color: var(--herb);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 20px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-text {
+      font-family: 'Playfair Display', serif;
+      font-style: italic;
+      font-size: 1rem;
+      color: var(--ink-muted);
+    }
+
+    /* ── Error ───────────────────────────────────── */
+    .error-box {
+      background: #fdf5f0;
+      border: 1px solid #d4a090;
+      color: var(--terracotta);
+      border-radius: 4px;
+      padding: 12px 18px;
+      margin-bottom: 24px;
+      font-size: 0.88rem;
+      display: none;
+    }
+
+    /* ── Section heading ─────────────────────────── */
+    .section-head {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+    .section-head::before, .section-head::after {
+      content: ''; flex: 1; height: 1px; background: var(--rule);
+    }
+    .section-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 0.8rem;
+      letter-spacing: 0.25em;
+      color: var(--ink-muted);
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    /* ── Days grid ───────────────────────────────── */
+    .plan-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+    }
+    .days-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(295px, 1fr));
+      gap: 20px;
+      margin-bottom: 52px;
+    }
+
+    /* ── Day card ────────────────────────────────── */
+    .day-card {
+      background: var(--ivory);
+      border: 1px solid var(--rule);
+      border-radius: 4px;
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .day-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); }
+    .day-card::before { content: ''; display: block; height: 3px; width: 100%; }
+    .cj::before { background: var(--herb); }
+    .cw::before { background: var(--ocean); }
+    .cc::before { background: var(--terracotta); }
+    .ce::before { background: var(--plum); }
+
+    .card-top {
+      padding: 18px 22px 14px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--rule);
+    }
+    .day-num {
+      font-family: 'Playfair Display', serif;
+      font-size: 2.6rem;
+      line-height: 1;
+      color: var(--ink-faint);
+      font-weight: 400;
+    }
+    .card-tags { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; }
+    .tag {
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      padding: 3px 10px;
+      border-radius: 2px;
+      text-transform: uppercase;
+    }
+    .tag-jp   { background: var(--herb-light);  color: var(--herb); }
+    .tag-west { background: var(--ocean-light); color: var(--ocean); }
+    .tag-cn   { background: var(--terra-light); color: var(--terracotta); }
+    .tag-eat  { background: var(--plum-light);  color: var(--plum); }
+    .tag-meat { background: #f8ede6; color: #7a3a18; }
+    .tag-fish { background: #e6f0f5; color: #1e5070; }
+
+    .card-body { padding: 16px 22px 10px; }
+    .recipe-section { margin-bottom: 14px; }
+    .recipe-section:last-child { margin-bottom: 0; }
+    .rs-label {
+      font-size: 0.62rem;
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      color: var(--ink-faint);
+      text-transform: uppercase;
+      margin-bottom: 3px;
+    }
+    .rs-rule { border: none; border-top: 1px solid var(--rule); margin: 0 0 8px; }
+    .dish-name {
+      font-family: 'Noto Serif JP', serif;
+      font-size: 1.02rem;
+      font-weight: 700;
+      color: var(--ink);
+      line-height: 1.4;
+    }
+    .dish-note {
+      font-size: 0.75rem;
+      color: var(--ink-muted);
+      margin-top: 3px;
+      font-style: italic;
+      line-height: 1.5;
+    }
+    .side-name { font-size: 0.9rem; color: var(--ink-light); font-weight: 500; }
+    .leftover-pill {
+      display: inline-block;
+      font-size: 0.65rem;
+      font-weight: 700;
+      color: var(--herb);
+      background: var(--herb-light);
+      border-radius: 2px;
+      padding: 1px 7px;
+      letter-spacing: 0.04em;
+      margin-top: 3px;
+    }
+    .side-memo { font-size: 0.73rem; color: var(--ink-muted); margin-top: 2px; }
+    .soup-name { font-size: 0.88rem; color: var(--ink-light); }
+    .seasonal-note {
+      display: inline-block;
+      font-size: 0.68rem;
+      color: #7a5c00;
+      background: #fdf5d8;
+      border: 1px solid #e8d888;
+      border-radius: 2px;
+      padding: 2px 9px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+    }
+
+    .eatout-body { padding: 24px 22px; display: flex; align-items: center; gap: 16px; }
+    .eatout-glyph { font-size: 2.2rem; }
+    .eatout-name { font-family: 'Noto Serif JP', serif; font-size: 1.1rem; font-weight: 700; }
+    .eatout-sub { font-size: 0.78rem; color: var(--ink-muted); margin-top: 4px; font-style: italic; }
+
+    .card-footer { padding: 10px 22px 14px; border-top: 1px solid var(--rule); }
+
+    /* ── Shopping list ───────────────────────────── */
+    .shopping-wrap {
+      background: var(--ivory);
+      border: 1px solid var(--rule);
+      border-radius: 4px;
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+    }
+    .shopping-head {
+      background: var(--cream);
+      border-bottom: 1px solid var(--rule);
+      padding: 18px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .shopping-title {
+      font-family: 'Noto Serif JP', serif;
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .shopping-title::before {
+      content: '';
+      display: inline-block;
+      width: 3px; height: 18px;
+      background: var(--herb);
+      border-radius: 2px;
+    }
+    .shopping-body { padding: 24px 28px; }
+    .shop-cat { margin-bottom: 22px; }
+    .shop-cat:last-child { margin-bottom: 0; }
+    .shop-cat-label {
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      color: var(--ink-muted);
+      text-transform: uppercase;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .shop-cat-label::after { content: ''; flex: 1; height: 1px; background: var(--rule); }
+    .chip-list { display: flex; flex-wrap: wrap; gap: 8px; }
+    .chip {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      background: var(--parchment);
+      border: 1px solid var(--rule);
+      border-radius: 2px;
+      font-size: 0.84rem;
+      color: var(--ink-light);
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.15s;
+    }
+    .chip:hover { border-color: var(--herb); color: var(--herb); }
+    .chip.done { background: #f0f0ec; color: var(--ink-faint); border-color: var(--rule); text-decoration: line-through; }
+    .chip-check { font-size: 0.75rem; color: var(--herb); opacity: 0; transition: opacity 0.15s; }
+    .chip.done .chip-check { opacity: 1; }
+    .chip-amount { font-size: 0.72rem; color: var(--ink-faint); border-left: 1px solid var(--rule); padding-left: 6px; margin-left: 2px; }
+
+    /* ── Empty ───────────────────────────────────── */
+    .empty { text-align: center; padding: 80px 20px 100px; }
+    .empty-ornament {
+      font-family: 'Playfair Display', serif;
+      font-size: 3.5rem;
+      color: var(--ink-faint);
+      margin-bottom: 20px;
+      opacity: 0.5;
+    }
+    .empty-title {
+      font-family: 'Playfair Display', serif;
+      font-style: italic;
+      font-size: 1.2rem;
+      color: var(--ink-muted);
+      margin-bottom: 10px;
+    }
+    .empty-sub { font-size: 0.85rem; color: var(--ink-faint); }
+
+    /* ── Responsive ──────────────────────────────── */
+    @media (max-width: 640px) {
+      header { padding: 0 16px; }
+      .page { padding: 28px 14px 60px; }
+      .input-row { flex-direction: column; }
+      .days-grid { grid-template-columns: 1fr; }
+      .shopping-head, .shopping-body { padding: 14px 18px; }
+    }
+
+    @media print {
+      header, .input-panel, .card-footer, .plan-top .btn-sub { display: none !important; }
+      body { background: white; }
+      .day-card { box-shadow: none; break-inside: avoid; border: 1px solid #ccc; }
+      .shopping-wrap { box-shadow: none; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="logo">
+      <span class="logo-en">Weekly Meal Planner</span>
+      <span class="logo-jp">週間献立プランナー</span>
+    </div>
+    <div class="header-right">
+      <span class="season-mark" id="seasonMark"></span>
+    </div>
+  </div>
+</header>
+
+<div class="page">
+
+  <div class="input-panel">
+    <label class="input-label">消費したい食材（任意）</label>
+    <div class="input-row">
+      <textarea class="input-area" id="ingredientsInput"
+        placeholder="例：豚バラ、なす、きのこ類、牛乳...　　※ここに書いた食材は買い物リストから除外されます"></textarea>
+      <button class="btn-primary" id="generateBtn" onclick="generatePlan()">献立を作成</button>
+    </div>
+  </div>
+
+  <div class="error-box" id="errorBox"></div>
+
+  <div id="result">
+    <div class="empty">
+      <div class="empty-ornament">✦</div>
+      <div class="empty-title">今週の食卓を、ととのえましょう</div>
+      <div class="empty-sub">「献立を作成」ボタンを押すと、7日分の献立と買い物リストをご提案します</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+let currentPlan = null;
+
+function getSeason() {
+  const m = new Date().getMonth() + 1;
+  if (m >= 3 && m <= 5) return { name: "春", cls: "sm-spring", label: "Spring · 春" };
+  if (m >= 6 && m <= 8) return { name: "夏", cls: "sm-summer", label: "Summer · 夏" };
+  if (m >= 9 && m <= 11) return { name: "秋", cls: "sm-autumn", label: "Autumn · 秋" };
+  return { name: "冬", cls: "sm-winter", label: "Winter · 冬" };
+}
+
+function init() {
+  const s = getSeason();
+  const el = document.getElementById("seasonMark");
+  el.textContent = s.label;
+  el.className = "season-mark " + s.cls;
+}
+
+function showError(msg) {
+  const el = document.getElementById("errorBox");
+  el.textContent = msg;
+  el.style.display = "block";
+}
+function hideError() { document.getElementById("errorBox").style.display = "none"; }
+
+async function callAPI(body) {
+  const res = await fetch("/api/chat", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body)
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error?.message || err.error || `エラー (${res.status})`);
+  }
+  return (await res.json()).content[0].text;
+}
+
+function buildSystemPrompt() {
+  const s = getSeason();
+  return `あなたは料理好きな家庭料理のプランナーです。7日分の献立と買い物リストをJSON形式で提案してください。
+
+【スタイルと参考】
+- 笠原将弘（和の技を家庭料理に）、コウケンテツ（アジアンテイスト・家族料理）、白ごはん.com（丁寧な和食）、Instagramで話題のレシピを参考に
+- メインは「一工夫効いた料理」を意識。「鶏の唐揚げ」より「にんにく醤油漬け唐揚げ（コウケンテツ風）」など具体的に
+- 調理のポイント・隠し味・盛り付けのひと手間をnoteに添える
+
+【ルール】
+- 現在の季節：${s.name}　旬の食材を積極的に使う
+- メインは肉・魚をバランスよく。焼き魚は週1回必ず
+- 和食中心（和4:洋2:中1程度）。好物：麻婆豆腐・しゅうまい・グラタン系も適度に
+- 外食は7日中0〜1回のみ
+- 副菜は1品。多めに作って翌日・翌々日に使い回す前提
+- 汁物は毎日。「味噌汁」とだけあれば残り食材で作る
+- 鶏むね肉・豚こま肉・ひき肉・一般的な野菜は常備品として買い物リストに含めない
+- 買い物リストは「消費したい食材として入力されたもの」以外で必要な食材のみ
+
+【出力】JSONのみ（前後に説明不要）
+{
+  "days": [
+    {
+      "dayNum": 1,
+      "cuisine": "和食",
+      "eatOut": false,
+      "eatOutType": null,
+      "main": "鶏と根菜の和風ポトフ（白ごはん.com風）",
+      "mainType": "meat",
+      "mainNote": "昆布だしで上品な味わい。ゆず胡椒を添えて",
+      "side": "ほうれん草の白和え",
+      "sideIsLeftover": false,
+      "sideLeftoverFrom": null,
+      "sideNote": "翌日も使えます",
+      "soup": "なめこと豆腐の味噌汁",
+      "seasonal": "新玉ねぎ",
+      "note": ""
+    }
+  ],
+  "shoppingList": [
+    {
+      "category": "魚介",
+      "items": [{ "name": "鯖（切り身）", "amount": "2切れ" }]
+    }
+  ]
+}
+cuisineは "和食" "洋食" "中華" "外食" のいずれか。
+eatOutの場合はeatOutTypeに任意の値を入れ他フィールドは空文字でOK。
+sideIsLeftoverがtrueの場合、sideLeftoverFromに参照元（例："2日目の白和え"）を入れる。
+買い物リストcategoryは "肉・魚介" "野菜・果物" "豆腐・乳製品・卵" "調味料・乾物" "その他" から選ぶ。`;
+}
+
+async function generatePlan() {
+  hideError();
+  const btn = document.getElementById("generateBtn");
+  btn.disabled = true;
+  btn.textContent = "生成中...";
+
+  document.getElementById("result").innerHTML = `
+    <div class="loading">
+      <div class="loader"></div>
+      <div class="loading-text">献立を考えています...</div>
+    </div>`;
+
+  try {
+    const ingredients = document.getElementById("ingredientsInput").value.trim();
+    const userMsg = [
+      "7日分の献立と買い物リストを提案してください。",
+      ingredients ? `【消費したい食材（買い物リスト除外）】${ingredients}` : ""
+    ].filter(Boolean).join("\n");
+
+    const text = await callAPI({
+      model: "claude-opus-4-6",
+      max_tokens: 4096,
+      system: buildSystemPrompt(),
+      messages: [{ role: "user", content: userMsg }]
+    });
+
+    const json = parseJSON(text);
+    currentPlan = json;
+    render(json);
+  } catch (e) {
+    document.getElementById("result").innerHTML = `
+      <div class="empty">
+        <div class="empty-ornament">✦</div>
+        <div class="empty-title">エラーが発生しました</div>
+        <div class="empty-sub">${e.message}</div>
+      </div>`;
+    showError("エラー: " + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "献立を作成";
+  }
+}
+
+function parseJSON(text) {
+  const m = text.match(/\{[\s\S]*\}/);
+  if (!m) throw new Error("JSONの解析に失敗しました");
+  return JSON.parse(m[0]);
+}
+
+function render(data) {
+  const days = data.days || [];
+  const shopping = data.shoppingList || [];
+
+  document.getElementById("result").innerHTML = `
+    <div class="plan-top">
+      <div class="section-head" style="flex:1;margin-bottom:0;">
+        <span class="section-title">7 Days · 今週の食卓</span>
+      </div>
+      <button class="btn-sub" style="margin-left:16px;" onclick="window.print()">印刷</button>
+    </div>
+    <div style="margin-bottom:28px;"></div>
+    <div class="days-grid">${days.map(renderCard).join("")}</div>
+    ${renderShopping(shopping)}`;
+}
+
+function renderCard(d, i) {
+  if (d.eatOut) return renderEatOut(d, i);
+
+  const cmap = { "和食": "cj tag-jp", "洋食": "cw tag-west", "中華": "cc tag-cn" };
+  const [ccls, tcls] = (cmap[d.cuisine] || "cj tag-jp").split(" ");
+  const typetag = d.mainType === "fish"
+    ? `<span class="tag tag-fish">魚</span>`
+    : `<span class="tag tag-meat">肉</span>`;
+
+  const sideExtra = d.sideIsLeftover
+    ? `<span class="leftover-pill">♻ ${d.sideLeftoverFrom}</span>`
+    : (d.sideNote ? `<div class="side-memo">${d.sideNote}</div>` : "");
+
+  return `
+    <div class="day-card ${ccls}">
+      <div class="card-top">
+        <div class="day-num">${d.dayNum}</div>
+        <div class="card-tags">
+          <span class="tag ${tcls}">${d.cuisine}</span>
+          ${typetag}
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="recipe-section">
+          <div class="rs-label">Main</div>
+          <hr class="rs-rule">
+          <div class="dish-name">${d.main || "—"}</div>
+          ${d.mainNote ? `<div class="dish-note">${d.mainNote}</div>` : ""}
+        </div>
+        <div class="recipe-section">
+          <div class="rs-label">Side</div>
+          <hr class="rs-rule">
+          <div class="side-name">${d.side || "—"}</div>
+          ${sideExtra}
+        </div>
+        <div class="recipe-section">
+          <div class="rs-label">Soup</div>
+          <hr class="rs-rule">
+          <div class="soup-name">${d.soup || "—"}</div>
+        </div>
+        ${d.seasonal ? `<div style="margin-top:10px;"><span class="seasonal-note">旬 · ${d.seasonal}</span></div>` : ""}
+        ${d.note ? `<div class="dish-note" style="margin-top:8px;">📝 ${d.note}</div>` : ""}
+      </div>
+      <div class="card-footer">
+        <button class="btn-sub" id="regen-${i}" onclick="regenDay(${i})">この日を作り直す</button>
+      </div>
+    </div>`;
+}
+
+function renderEatOut(d, i) {
+  return `
+    <div class="day-card ce">
+      <div class="card-top">
+        <div class="day-num">${d.dayNum}</div>
+        <span class="tag tag-eat">外食</span>
+      </div>
+      <div class="eatout-body">
+        <div class="eatout-glyph">🍽</div>
+        <div>
+          <div class="eatout-name">外食</div>
+          <div class="eatout-sub">今日はゆっくり外でどうぞ</div>
+        </div>
+      </div>
+      <div class="card-footer">
+        <button class="btn-sub" id="regen-${i}" onclick="regenDay(${i})">この日を作り直す</button>
+      </div>
+    </div>`;
+}
+
+function renderShopping(list) {
+  if (!list.length) return "";
+  const cats = list.map(cat => {
+    const chips = (cat.items || []).map(item => `
+      <li class="chip" onclick="this.classList.toggle('done')">
+        <span class="chip-check">✓</span>
+        ${item.name}
+        ${item.amount ? `<span class="chip-amount">${item.amount}</span>` : ""}
+      </li>`).join("");
+    return `
+      <div class="shop-cat">
+        <div class="shop-cat-label">${cat.category}</div>
+        <ul class="chip-list">${chips}</ul>
+      </div>`;
+  }).join("");
+
+  return `
+    <div class="section-head"><span class="section-title">Shopping List · 買い物リスト</span></div>
+    <div class="shopping-wrap">
+      <div class="shopping-head">
+        <span class="shopping-title">買い物リスト</span>
+        <button class="btn-sub" onclick="copyList()">📋 コピー</button>
+      </div>
+      <div class="shopping-body">${cats}</div>
+    </div>`;
+}
+
+async function regenDay(i) {
+  const btn = document.getElementById(`regen-${i}`);
+  if (!btn) return;
+  btn.disabled = true;
+  btn.textContent = "生成中...";
+
+  try {
+    const others = currentPlan?.days?.filter((_, j) => j !== i)
+      .map(x => x.main || "外食").filter(Boolean).join("、");
+    const ingredients = document.getElementById("ingredientsInput").value.trim();
+
+    const msg = `DAY${i + 1}の献立1日分のみ提案してください。
+他の日のメイン：${others}（重複しない）
+${ingredients ? `消費したい食材：${ingredients}` : ""}
+出力は{"dayNum":${i+1},"cuisine":"...","eatOut":false,"eatOutType":null,"main":"...","mainType":"...","mainNote":"...","side":"...","sideIsLeftover":false,"sideLeftoverFrom":null,"sideNote":"...","soup":"...","seasonal":"...","note":"..."}のJSONのみ。`;
+
+    const text = await callAPI({
+      model: "claude-opus-4-6",
+      max_tokens: 1024,
+      system: buildSystemPrompt(),
+      messages: [{ role: "user", content: msg }]
+    });
+
+    const m = text.match(/\{[\s\S]*?\}/);
+    if (m) {
+      currentPlan.days[i] = { ...JSON.parse(m[0]), dayNum: i + 1 };
+      render(currentPlan);
+    }
+  } catch (e) {
+    btn.disabled = false;
+    btn.textContent = "この日を作り直す";
+    alert("エラー: " + e.message);
+  }
+}
+
+function copyList() {
+  if (!currentPlan?.shoppingList) return;
+  const text = currentPlan.shoppingList.map(cat =>
+    `【${cat.category}】\n` + (cat.items || []).map(i => `・${i.name}${i.amount ? " " + i.amount : ""}`).join("\n")
+  ).join("\n\n");
+  navigator.clipboard.writeText(text).then(() => alert("コピーしました"));
+}
+
+init();
+</script>
+</body>
+</html>
